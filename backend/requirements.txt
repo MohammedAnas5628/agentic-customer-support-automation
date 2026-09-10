@@ -1,0 +1,28 @@
+# FastAPI
+fastapi
+uvicorn[standard]
+
+# Configuration & validation
+pydantic
+pydantic-settings
+python-dotenv
+
+# Database
+sqlalchemy
+asyncpg
+alembic
+pgvector
+
+# AI / Agents
+langchain
+langgraph
+langchain-google-genai
+langsmith
+
+# Redis
+redis
+
+# Testing
+pytest
+pytest-asyncio
+httpx
