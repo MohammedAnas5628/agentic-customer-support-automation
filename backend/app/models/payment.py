@@ -68,3 +68,9 @@ class Payment(Base):
         "Order",
         back_populates="payment",
     )
+
+    refunds = relationship(
+        "Refund",
+        back_populates="payment",
+        cascade="all, delete-orphan",
+    )

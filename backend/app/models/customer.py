@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
 
@@ -53,4 +53,19 @@ class Customer(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+    orders = relationship(
+        "Order",
+        back_populates="customer",
+    )
+
+    tickets = relationship(
+        "Ticket",
+        back_populates="customer",
+    )
+
+    conversations = relationship(
+        "Conversation",
+        back_populates="customer",
     )
