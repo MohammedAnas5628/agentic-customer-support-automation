@@ -1,14 +1,27 @@
 from backend.app.rag.document_chunker import chunk_documents
 from backend.app.rag.document_loader import load_knowledge_base
-from backend.app.rag.embeddings import embed_documents
+from backend.app.rag import embeddings
 
 
-def test_embeddings_cover_all_knowledge_base_chunks():
+def test_embeddings_cover_all_knowledge_base_chunks(monkeypatch):
     documents = load_knowledge_base()
     assert len(documents) == 15
 
     chunks = chunk_documents(documents)
-    embedded_documents = embed_documents(chunks)
+    monkeypatch.setattr(
+        embeddings,
+        "GoogleGenerativeAIEmbeddings",
+        lambda **_kwargs: type(
+            "FakeEmbeddings",
+            (),
+            {
+                "embed_documents": lambda _self, texts: [
+                    [0.0] * 3072 for _text in texts
+                ]
+            },
+        )(),
+    )
+    embedded_documents = embeddings.embed_documents(chunks)
 
     assert len(embedded_documents) == len(chunks)
     assert all(

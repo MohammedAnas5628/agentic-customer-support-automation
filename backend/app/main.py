@@ -7,6 +7,8 @@ from backend.app.api.orders import router as orders_router
 from backend.app.api.products import router as products_router
 from backend.app.api.refunds import router as refunds_router
 from backend.app.api.tickets import router as tickets_router
+from backend.app.api.rag import router as rag_router
+from backend.app.api.auth import router as auth_router
 from backend.app.core.config import settings
 from backend.app.db.database import AsyncSessionLocal
 
@@ -23,6 +25,8 @@ app.include_router(customers_router)
 app.include_router(products_router)
 app.include_router(refunds_router)
 app.include_router(tickets_router)
+app.include_router(rag_router)
+app.include_router(auth_router)
 
 
 @app.get("/health")

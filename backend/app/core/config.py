@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     gemini_chat_model: str = "gemini-2.0-flash"
     rag_top_k: int = 5
     rag_relevance_threshold: float = 0.55
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
 
     # Database
     database_url: str

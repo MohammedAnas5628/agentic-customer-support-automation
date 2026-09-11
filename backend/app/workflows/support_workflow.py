@@ -5,6 +5,9 @@ from typing import Literal, TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from backend.app.agents.knowledge_agent import run_knowledge_agent
+from backend.app.agents.order_agent import run_order_agent
+from backend.app.agents.support_agent import run_support_agent
+from backend.app.agents.escalation_agent import run_escalation_agent
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +27,12 @@ class SupportState(TypedDict, total=False):
     sources: list[dict]
     retrieval_score: float | None
     rag_status: str
+    order_tool: str
+    support_tool: str
+    escalation_reason: str
+    handoff_reference: str | None
+    authenticated_customer_id: int | None
+    authenticated_role: str
 
 
 def _record_node(state: SupportState, node_name: str) -> list[str]:
@@ -68,29 +77,92 @@ async def knowledge_node(state: SupportState) -> SupportState:
     }
 
 
-def order_node(state: SupportState) -> SupportState:
+async def order_node(state: SupportState) -> SupportState:
+    try:
+        if "authenticated_customer_id" in state or "authenticated_role" in state:
+            result = await run_order_agent(
+                state["user_message"],
+                actor_customer_id=state.get("authenticated_customer_id"),
+                actor_role=state.get("authenticated_role", "customer"),
+            )
+        else:
+            result = await run_order_agent(state["user_message"])
+    except Exception:
+        logger.exception("Order Agent failed while handling a customer question")
+        return {
+            "selected_agent": "order",
+            "final_response": (
+                "I couldn't access the order system right now. "
+                "Please try again or contact customer support."
+            ),
+            "escalation_status": "recommended",
+            "order_tool": "error",
+            "executed_nodes": _record_node(state, "order"),
+        }
     return {
         "selected_agent": "order",
-        "final_response": "Order agent capability is not implemented yet.",
-        "escalation_status": "not_required",
+        "final_response": result.message,
+        "escalation_status": "not_required" if result.success else "recommended",
+        "order_tool": result.tool,
         "executed_nodes": _record_node(state, "order"),
     }
 
 
-def support_node(state: SupportState) -> SupportState:
+async def support_node(state: SupportState) -> SupportState:
+    try:
+        if "authenticated_customer_id" in state or "authenticated_role" in state:
+            result = await run_support_agent(
+                state["user_message"],
+                actor_customer_id=state.get("authenticated_customer_id"),
+                actor_role=state.get("authenticated_role", "customer"),
+            )
+        else:
+            result = await run_support_agent(state["user_message"])
+    except Exception:
+        logger.exception("Support Agent failed while handling a customer question")
+        return {
+            "selected_agent": "support",
+            "final_response": (
+                "I couldn't access the support ticket system right now. "
+                "Please try again or contact customer support."
+            ),
+            "escalation_status": "recommended",
+            "support_tool": "error",
+            "executed_nodes": _record_node(state, "support"),
+        }
     return {
         "selected_agent": "support",
-        "final_response": "Support agent capability is not implemented yet.",
-        "escalation_status": "not_required",
+        "final_response": result.message,
+        "escalation_status": "not_required" if result.success else "recommended",
+        "support_tool": result.tool,
         "executed_nodes": _record_node(state, "support"),
     }
 
 
-def escalation_node(state: SupportState) -> SupportState:
+async def escalation_node(state: SupportState) -> SupportState:
+    try:
+        result = await run_escalation_agent(
+            state["user_message"],
+            rag_status=state.get("rag_status"),
+        )
+    except Exception:
+        logger.exception("Escalation Agent failed while handling a customer question")
+        return {
+            "selected_agent": "escalation",
+            "final_response": (
+                "I couldn't complete the human handoff right now. "
+                "Please try again or contact customer support."
+            ),
+            "escalation_status": "error",
+            "escalation_reason": "system_error",
+            "executed_nodes": _record_node(state, "escalation"),
+        }
     return {
         "selected_agent": "escalation",
-        "final_response": "Escalation agent capability is not implemented yet.",
-        "escalation_status": "pending",
+        "final_response": result.message,
+        "escalation_status": "pending" if result.success else "recommended",
+        "escalation_reason": result.reason,
+        "handoff_reference": result.ticket_number,
         "executed_nodes": _record_node(state, "escalation"),
     }
 
@@ -141,15 +213,24 @@ def build_support_graph():
 support_graph = build_support_graph()
 
 
-async def run_support_workflow_async(user_message: str, intent: str) -> SupportState:
+async def run_support_workflow_async(
+    user_message: str,
+    intent: str,
+    *,
+    authenticated_customer_id: int | None = None,
+    authenticated_role: str | None = None,
+) -> SupportState:
     """Run the workflow in async applications such as FastAPI."""
-    return await support_graph.ainvoke(
-        {
+    initial_state: SupportState = {
             "user_message": user_message,
             "intent": intent,
             "executed_nodes": [],
-        }
-    )
+    }
+    if authenticated_customer_id is not None:
+        initial_state["authenticated_customer_id"] = authenticated_customer_id
+    if authenticated_role is not None:
+        initial_state["authenticated_role"] = authenticated_role
+    return await support_graph.ainvoke(initial_state)
 
 
 def run_support_workflow(user_message: str, intent: str) -> SupportState:

@@ -42,6 +42,13 @@ class Customer(Base):
         nullable=False,
     )
 
+    role: Mapped[str] = mapped_column(
+        String(20),
+        default="customer",
+        server_default="customer",
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

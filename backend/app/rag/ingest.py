@@ -73,6 +73,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     try:
         result = asyncio.run(run_ingestion())
+    except RuntimeError as exc:
+        logger.error("Knowledge-base ingestion stopped: %s", exc)
+        raise SystemExit(1)
     except Exception:
         logger.exception("Knowledge-base ingestion failed")
         raise SystemExit(1)

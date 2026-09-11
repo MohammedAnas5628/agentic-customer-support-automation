@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.database import get_db
+from backend.app.core.security import get_current_user, require_roles
+from backend.app.models.customer import Customer
 from backend.app.schemas.customer import (
     CustomerResponse,
     CustomerTicketResponse,
@@ -21,7 +23,10 @@ router = APIRouter(prefix="/api/customers", tags=["customers"])
 async def read_customer(
     customer_id: int,
     session: AsyncSession = Depends(get_db),
+    current_user: Customer = Depends(get_current_user),
 ) -> CustomerResponse:
+    if current_user.role == "customer" and customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     customer = await get_customer(session, customer_id)
     if customer is None:
         raise HTTPException(
@@ -36,7 +41,10 @@ async def read_customer(
 async def read_customer_orders(
     customer_id: int,
     session: AsyncSession = Depends(get_db),
+    current_user: Customer = Depends(get_current_user),
 ) -> list[OrderResponse]:
+    if current_user.role == "customer" and customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     customer, orders = await get_customer_orders(session, customer_id)
     if customer is None:
         raise HTTPException(
@@ -51,7 +59,10 @@ async def read_customer_orders(
 async def read_customer_tickets(
     customer_id: int,
     session: AsyncSession = Depends(get_db),
+    current_user: Customer = Depends(get_current_user),
 ) -> list[CustomerTicketResponse]:
+    if current_user.role == "customer" and customer_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     customer, tickets = await get_customer_tickets(session, customer_id)
     if customer is None:
         raise HTTPException(
