@@ -7,6 +7,7 @@ from backend.app.models.refund import Refund
 from backend.app.models.ticket import Ticket
 from backend.app.models.conversation import Conversation
 from backend.app.models.message import Message
+from backend.app.models.rag_document_chunk import RagDocumentChunk
 
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "Ticket",
     "Conversation",
     "Message",
+    "RagDocumentChunk",
 ]

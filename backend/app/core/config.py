@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     gemini_api_key: str
     langsmith_api_key: str
     langsmith_tracing: bool = True
+    gemini_chat_model: str = "gemini-2.0-flash"
+    rag_top_k: int = 5
+    rag_relevance_threshold: float = 0.55
 
     # Database
     database_url: str
