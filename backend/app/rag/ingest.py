@@ -7,14 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.db.database import AsyncSessionLocal, engine
 from backend.app.rag.document_chunker import chunk_documents
 from backend.app.rag.document_loader import load_knowledge_base
-from backend.app.rag.embeddings import EmbeddedDocument, embed_documents
+from backend.app.rag.embeddings import (
+    EMBEDDING_DIMENSION,
+    EmbeddedDocument,
+    embed_documents,
+)
 from backend.app.rag.storage import replace_embedded_documents
 
 
 logger = logging.getLogger(__name__)
-EMBEDDING_DIMENSION = 3072
-
-
 @dataclass(frozen=True)
 class IngestionResult:
     documents_processed: int
@@ -45,8 +46,8 @@ async def ingest_knowledge_base(session: AsyncSession) -> IngestionResult:
         embedded_documents = embed_documents(chunks)
     except Exception as exc:
         raise RuntimeError(
-            "Gemini embedding generation failed; no records were stored. "
-            "Check API quota and configuration."
+            "Local embedding generation failed; no records were stored. "
+            "Check the model download and local environment."
         ) from exc
 
     if len(embedded_documents) != len(chunks):

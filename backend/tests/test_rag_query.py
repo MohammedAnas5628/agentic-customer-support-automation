@@ -34,7 +34,7 @@ class FakeSession:
 
 
 def _chunk(source: str, content: str) -> RagDocumentChunk:
-    return RagDocumentChunk(content=content, source=source, embedding=[0.0] * 3072)
+    return RagDocumentChunk(content=content, source=source, embedding=[0.0] * 384)
 
 
 @pytest.mark.asyncio
@@ -43,7 +43,7 @@ async def test_retrieval_embeds_query_orders_results_and_respects_top_k(monkeypa
     monkeypatch.setattr(
         retrieval,
         "embed_query",
-        lambda query: called.append(query) or [0.1] * 3072,
+        lambda query: called.append(query) or [0.1] * 384,
     )
     session = FakeSession(
         [
@@ -70,7 +70,7 @@ async def test_retrieval_embeds_query_orders_results_and_respects_top_k(monkeypa
 
 @pytest.mark.asyncio
 async def test_retrieval_filters_weak_results(monkeypatch):
-    monkeypatch.setattr(retrieval, "embed_query", lambda _query: [0.1] * 3072)
+    monkeypatch.setattr(retrieval, "embed_query", lambda _query: [0.1] * 384)
     session = FakeSession([(_chunk("general_faq.md", "Weak match"), 0.7)])
 
     results = await retrieval.retrieve_chunks(

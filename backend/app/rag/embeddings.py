@@ -1,12 +1,12 @@
 from dataclasses import dataclass
+from functools import lru_cache
 
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
-from backend.app.core.config import settings
+from sentence_transformers import SentenceTransformer
 
 
-EMBEDDING_MODEL = "models/gemini-embedding-001"
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+EMBEDDING_DIMENSION = 384
 
 
 @dataclass(frozen=True)
@@ -17,15 +17,27 @@ class EmbeddedDocument:
     embedding: list[float]
 
 
+@lru_cache(maxsize=1)
+def _get_model() -> SentenceTransformer:
+    """Load and cache the local model, downloading it on first use."""
+    return SentenceTransformer(EMBEDDING_MODEL)
+
+
+def _encode(texts: list[str]) -> list[list[float]]:
+    vectors = _get_model().encode(
+        texts,
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
+    return [vector.tolist() if hasattr(vector, "tolist") else list(vector) for vector in vectors]
+
+
 def embed_documents(documents: list[Document]) -> list[EmbeddedDocument]:
-    """Generate Gemini embeddings for document content without storing them."""
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=EMBEDDING_MODEL,
-        api_key=settings.gemini_api_key,
-    )
-    vectors = embeddings.embed_documents(
-        [document.page_content for document in documents]
-    )
+    """Generate local BGE embeddings for document content without storing them."""
+    vectors = _encode([document.page_content for document in documents])
+    if any(len(vector) != EMBEDDING_DIMENSION for vector in vectors):
+        raise ValueError(f"Document embedding dimension mismatch: expected {EMBEDDING_DIMENSION}.")
     return [
         EmbeddedDocument(document=document, embedding=vector)
         for document, vector in zip(documents, vectors, strict=True)
@@ -37,13 +49,9 @@ def embed_query(query: str) -> list[float]:
     if not query.strip():
         raise ValueError("Cannot embed an empty query.")
 
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=EMBEDDING_MODEL,
-        api_key=settings.gemini_api_key,
-    )
-    vector = embeddings.embed_query(query)
-    if len(vector) != 3072:
+    vector = _encode([query])[0]
+    if len(vector) != EMBEDDING_DIMENSION:
         raise ValueError(
-            f"Query embedding dimension mismatch: expected 3072, got {len(vector)}."
+            f"Query embedding dimension mismatch: expected {EMBEDDING_DIMENSION}, got {len(vector)}."
         )
     return vector

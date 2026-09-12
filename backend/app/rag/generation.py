@@ -53,6 +53,18 @@ def _context_records(chunks: list[RetrievedChunk]) -> list[dict[str, Any]]:
     ]
 
 
+def _response_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            item.get("text", "")
+            for item in content
+            if isinstance(item, dict) and item.get("type") == "text"
+        )
+    return str(content)
+
+
 def create_chat_model() -> ChatGoogleGenerativeAI:
     return ChatGoogleGenerativeAI(
         model=settings.gemini_chat_model,
@@ -90,7 +102,7 @@ async def generate_grounded_answer(
     except Exception as exc:
         raise RuntimeError("Grounded answer generation failed.") from exc
 
-    answer = response.content if isinstance(response.content, str) else str(response.content)
+    answer = _response_text(response.content)
     if not answer.strip():
         raise RuntimeError("Grounded answer generation returned empty content.")
     return GroundedAnswer(answer.strip(), sources, context, "answered")

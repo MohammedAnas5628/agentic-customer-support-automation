@@ -15,7 +15,7 @@ class FakeEmbeddedDocument:
 
 def _fake_embeddings(chunks):
     return [
-        FakeEmbeddedDocument(chunk, [0.0] * ingest.EMBEDDING_DIMENSION)
+        FakeEmbeddedDocument(chunk, [0.0] * 384)
         for chunk in chunks
     ]
 
