@@ -1,0 +1,7 @@
+"use client";
+import Link from "next/link";
+import { ArrowUpRight, Box } from "lucide-react";
+import { motion } from "framer-motion";
+import type { Product } from "@/types/product";
+import { formatCurrency } from "@/lib/utils";
+export function ProductCard({ product }: { product: Product }) { return <motion.article whileHover={{ y: -6 }} transition={{ duration: .2 }} className="group surface overflow-hidden"><Link href={`/products/${product.id}`}><div className="relative grid aspect-[4/3] place-items-center overflow-hidden bg-gradient-to-br from-slate-100 via-white to-indigo-100"><Box className="h-16 w-16 text-electric/70 transition duration-500 group-hover:scale-110 group-hover:rotate-6" strokeWidth={1.2} /><span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-slate-600 backdrop-blur">{product.category}</span></div><div className="p-5"><p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{product.brand}</p><h3 className="mt-1 line-clamp-1 text-base font-bold">{product.name}</h3><div className="mt-4 flex items-center justify-between"><p className="text-lg font-extrabold">{formatCurrency(product.price)}</p><span className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-700 transition group-hover:bg-electric group-hover:text-white"><ArrowUpRight size={17} /></span></div></div></Link></motion.article> }

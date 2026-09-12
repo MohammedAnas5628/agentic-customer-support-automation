@@ -1,0 +1,1 @@
+import { Protected } from "@/components/auth/protected"; import { OrderDetailView } from "@/features/orders/order-views"; export default async function Order({params}:{params:Promise<{number:string}>}){const{number}=await params;return <Protected><OrderDetailView number={number}/></Protected>}

@@ -1,0 +1,1 @@
+import { Protected } from "@/components/auth/protected"; import { TicketDetailView } from "@/features/tickets/ticket-views"; export default async function Ticket({params}:{params:Promise<{number:string}>}){const{number}=await params;return <Protected><TicketDetailView number={number}/></Protected>}

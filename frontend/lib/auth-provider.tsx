@@ -1,0 +1,6 @@
+"use client";
+import { createContext,useCallback,useContext,useEffect,useState } from "react";
+import { authApi,type User } from "@/lib/api";
+type Context={user:User|null;ready:boolean;signIn:(email:string,password:string)=>Promise<User>;signOut:()=>void};const Auth=createContext<Context|undefined>(undefined);
+export function AuthProvider({children}:{children:React.ReactNode}){const[user,setUser]=useState<User|null>(null);const[ready,setReady]=useState(false);const signOut=useCallback(()=>{localStorage.removeItem("electromart_token");setUser(null);setReady(true)},[]);useEffect(()=>{window.addEventListener("electromart:unauthorized",signOut);if(!localStorage.getItem("electromart_token")){setReady(true)}else{authApi.me().then(setUser).catch(signOut).finally(()=>setReady(true))}return()=>window.removeEventListener("electromart:unauthorized",signOut)},[signOut]);const signIn=async(email:string,password:string)=>{const session=await authApi.login(email,password);localStorage.setItem("electromart_token",session.access_token);try{const current=await authApi.me();setUser(current);return current}catch(error){signOut();throw error}};return <Auth.Provider value={{user,ready,signIn,signOut}}>{children}</Auth.Provider>}
+export function useAuth(){const value=useContext(Auth);if(!value)throw new Error("useAuth must be used within AuthProvider");return value}

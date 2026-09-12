@@ -1,0 +1,2 @@
+import { Button } from "@/components/ui/button";
+export default function NotFound() { return <section className="shell grid min-h-[60vh] place-items-center text-center"><div><p className="eyebrow">404</p><h1 className="mt-3 text-4xl font-extrabold">This page has gone offline.</h1><p className="mt-3 text-slate-500">Let’s get you back to something brilliant.</p><Button href="/" className="mt-7">Return home</Button></div></section> }

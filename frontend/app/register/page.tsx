@@ -1,0 +1,1 @@
+import { AuthForm } from "@/features/auth/auth-form"; export const metadata={title:"Create account | ElectroMart"}; export default function Register(){return <section className="shell py-14"><AuthForm mode="register" /></section>}

@@ -1,0 +1,2 @@
+import { cn } from "@/lib/utils";
+export function StatusPill({value}:{value:string}){const tone=/delivered|resolved|paid|completed/i.test(value)?"bg-emerald-50 text-emerald-700":/cancelled|failed|closed/i.test(value)?"bg-rose-50 text-rose-700":/processing|open|pending|packed/i.test(value)?"bg-amber-50 text-amber-700":"bg-indigo-50 text-indigo-700";return <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold capitalize",tone)}>{value.replaceAll("_"," ")}</span>}

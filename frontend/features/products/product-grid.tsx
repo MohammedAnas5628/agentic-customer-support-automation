@@ -1,0 +1,5 @@
+"use client";
+import { useQuery } from "@tanstack/react-query";
+import { productsApi } from "@/lib/api";
+import { ProductCard } from "./product-card";
+export function ProductGrid({ limit }: { limit?: number }) { const { data, isPending, isError } = useQuery({ queryKey: ["products"], queryFn: productsApi.list }); if (isPending) return <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{Array.from({ length: limit ?? 4 }).map((_, i) => <div key={i} className="aspect-[3/4] animate-pulse rounded-3xl bg-slate-200" />)}</div>; if (isError) return <div className="surface p-8 text-center"><p className="font-bold">Products are taking a moment.</p><p className="mt-2 text-sm text-slate-500">Check that the ElectroMart API is running, then refresh the page.</p></div>; const products = data?.filter((product) => product.is_active).slice(0, limit); if (!products?.length) return <div className="surface p-8 text-center text-slate-500">No products available right now.</div>; return <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div>; }

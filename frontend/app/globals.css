@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base { * { @apply border-slate-200; } html { @apply scroll-smooth; } body { @apply bg-cloud text-ink antialiased; } ::selection { @apply bg-electric/20 text-ink; } }
+@layer components { .shell { @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12; } .eyebrow { @apply text-xs font-bold uppercase tracking-[.18em] text-electric; } .surface { @apply rounded-3xl border border-white/80 bg-white shadow-soft; } .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric focus-visible:ring-offset-2; } }
