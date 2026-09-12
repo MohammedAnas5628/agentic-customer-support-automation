@@ -27,6 +27,7 @@ def mock_knowledge_agent(monkeypatch):
 @pytest.mark.parametrize(
     ("intent", "agent"),
     [
+        ("catalog", "catalog"),
         ("knowledge", "knowledge"),
         ("order", "order"),
         ("support", "support"),
@@ -53,6 +54,18 @@ def test_unknown_intent_uses_safe_fallback():
 
 def test_graph_compiles():
     assert build_support_graph() is not None
+
+
+@pytest.mark.asyncio
+async def test_catalog_route_reaches_catalog_agent(monkeypatch):
+    async def run_catalog_agent(_message):
+        return "Here are the laptops currently available."
+
+    monkeypatch.setattr(support_workflow, "run_catalog_agent", run_catalog_agent)
+    result = await support_workflow.run_support_workflow_async("Show me laptops", "catalog")
+
+    assert result["selected_agent"] == "catalog"
+    assert result["executed_nodes"] == ["router", "catalog"]
 
 
 @pytest.mark.asyncio

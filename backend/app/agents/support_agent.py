@@ -74,12 +74,15 @@ async def run_support_agent(
             )
 
         customer_match = CUSTOMER_PATTERN.search(message)
-        if customer_match is None:
+        resolved_customer_id = actor_customer_id or (
+            int(customer_match.group(1)) if customer_match else None
+        )
+        if resolved_customer_id is None:
             return TicketToolResult(False, "support_agent", INVALID_TICKET_RESPONSE)
         subject = message[:200].strip()
         return await create_ticket_tool(
             session,
-            customer_id=int(customer_match.group(1)),
+            customer_id=resolved_customer_id,
             subject=subject or "Customer support request",
             description=message,
             actor_customer_id=actor_customer_id,

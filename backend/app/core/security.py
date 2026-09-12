@@ -13,6 +13,7 @@ from backend.app.models.customer import Customer
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 password_hash = PasswordHash.recommended()
 
 
@@ -74,4 +75,33 @@ async def authenticate_customer(session: AsyncSession, email: str, password: str
     customer = result.scalar_one_or_none()
     if customer is None or not customer.is_active or not verify_password(password, customer.password_hash):
         return None
+    return customer
+
+
+async def get_optional_current_user(
+    token: str | None = Depends(optional_oauth2_scheme),
+    session: AsyncSession = Depends(get_db),
+) -> Customer | None:
+    """Return the signed-in customer when a valid bearer token is supplied.
+
+    Public support questions remain available without a session; protected actions
+    are explicitly rejected by the support endpoint before workflow execution.
+    """
+    if token is None:
+        return None
+    credentials_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if not settings.jwt_secret:
+        raise credentials_error
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        customer_id = int(payload["sub"])
+    except (jwt.PyJWTError, KeyError, TypeError, ValueError):
+        raise credentials_error
+    customer = await session.get(Customer, customer_id)
+    if customer is None or not customer.is_active:
+        raise credentials_error
     return customer

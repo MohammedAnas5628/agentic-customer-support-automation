@@ -5,6 +5,7 @@ from typing import Literal, TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from backend.app.agents.knowledge_agent import run_knowledge_agent
+from backend.app.agents.catalog_agent import run_catalog_agent
 from backend.app.agents.order_agent import run_order_agent
 from backend.app.agents.support_agent import run_support_agent
 from backend.app.agents.escalation_agent import run_escalation_agent
@@ -13,7 +14,7 @@ from backend.app.agents.escalation_agent import run_escalation_agent
 logger = logging.getLogger(__name__)
 
 
-Intent = Literal["knowledge", "order", "support", "escalation", "unknown"]
+Intent = Literal["catalog", "knowledge", "order", "support", "escalation", "unknown"]
 
 
 class SupportState(TypedDict, total=False):
@@ -74,6 +75,27 @@ async def knowledge_node(state: SupportState) -> SupportState:
         ),
         "rag_status": result.status,
         "executed_nodes": _record_node(state, "knowledge"),
+    }
+
+
+async def catalog_node(state: SupportState) -> SupportState:
+    try:
+        answer = await run_catalog_agent(state["user_message"])
+    except Exception:
+        logger.exception("Catalog Agent failed while handling a product question")
+        return {
+            "selected_agent": "catalog",
+            "final_response": "I couldn't access the product catalog right now. Please try again shortly.",
+            "escalation_status": "recommended",
+            "catalog_status": "error",
+            "executed_nodes": _record_node(state, "catalog"),
+        }
+    return {
+        "selected_agent": "catalog",
+        "final_response": answer,
+        "escalation_status": "not_required",
+        "catalog_status": "answered",
+        "executed_nodes": _record_node(state, "catalog"),
     }
 
 
@@ -143,6 +165,7 @@ async def escalation_node(state: SupportState) -> SupportState:
     try:
         result = await run_escalation_agent(
             state["user_message"],
+            customer_id=state.get("authenticated_customer_id"),
             rag_status=state.get("rag_status"),
         )
     except Exception:
@@ -178,6 +201,7 @@ def fallback_node(state: SupportState) -> SupportState:
 
 def route_by_intent(state: SupportState) -> str:
     return {
+        "catalog": "catalog",
         "knowledge": "knowledge",
         "order": "order",
         "support": "support",
@@ -188,6 +212,7 @@ def route_by_intent(state: SupportState) -> str:
 def build_support_graph():
     graph = StateGraph(SupportState)
     graph.add_node("router", router_node)
+    graph.add_node("catalog", catalog_node)
     graph.add_node("knowledge", knowledge_node)
     graph.add_node("order", order_node)
     graph.add_node("support", support_node)
@@ -198,6 +223,7 @@ def build_support_graph():
         "router",
         route_by_intent,
         {
+            "catalog": "catalog",
             "knowledge": "knowledge",
             "order": "order",
             "support": "support",
@@ -205,7 +231,7 @@ def build_support_graph():
             "fallback": "fallback",
         },
     )
-    for node_name in ("knowledge", "order", "support", "escalation", "fallback"):
+    for node_name in ("catalog", "knowledge", "order", "support", "escalation", "fallback"):
         graph.add_edge(node_name, END)
     return graph.compile()
 

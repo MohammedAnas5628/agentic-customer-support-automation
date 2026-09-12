@@ -1,0 +1,30 @@
+warning: in the working copy of 'backend/app/agents/support_agent.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app/core/security.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/tests/test_support_agent.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/features/home/sections.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/features/products/product-card.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/features/products/product-detail.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/features/products/product-grid.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/features/support/support-chat.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/lib/api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/next.config.ts', LF will be replaced by CRLF the next time Git touches it
+ backend/app/agents/knowledge_agent.py         | 18 [32m+++++++++++[m
+ backend/app/agents/support_agent.py           |  9 [32m++++[m[31m--[m
+ backend/app/api/rag.py                        |  4 [32m+[m[31m--[m
+ backend/app/core/security.py                  | 32 [32m++++++++++++++++++[m[31m-[m
+ backend/app/main.py                           |  4 [32m++[m[31m-[m
+ backend/app/rag/generation.py                 |  4 [32m+[m[31m--[m
+ backend/app/rag/retrieval.py                  | 41 [32m+++++++++++[m[31m-------------[m
+ backend/app/workflows/support_workflow.py     | 32 [32m+++++++++++++++++[m[31m--[m
+ backend/tests/test_rag_query.py               |  9 [32m++++++[m
+ backend/tests/test_support_agent.py           | 16 [32m+++++++++[m[31m-[m
+ backend/tests/test_support_workflow.py        | 13 [32m++++++++[m
+ frontend/features/home/sections.tsx           |  8 [32m+++[m[31m--[m
+ frontend/features/products/product-card.tsx   |  6 [32m++[m[31m--[m
+ frontend/features/products/product-detail.tsx | 21 [32m+++++++++++[m[31m--[m
+ frontend/features/products/product-grid.tsx   | 45 [32m++++++++++++++++++++++++++[m[31m-[m
+ frontend/features/support/support-chat.tsx    |  4 [32m+[m[31m--[m
+ frontend/lib/api.ts                           |  2 [32m++[m
+ frontend/next.config.ts                       |  3 [32m++[m
+ 18 files changed, 225 insertions(+), 46 deletions(-)

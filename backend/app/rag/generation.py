@@ -9,8 +9,8 @@ from backend.app.rag.retrieval import RetrievedChunk
 
 
 NO_CONTEXT_RESPONSE = (
-    "I couldn't find enough information in ElectroMart's knowledge base to answer "
-    "that accurately. I can escalate this to customer support."
+    "I don't currently have enough information to answer that accurately. "
+    "I can help with ElectroMart products, orders, delivery, returns, warranty, payments, and support."
 )
 
 GROUNDING_SYSTEM_PROMPT = """You are ElectroMart Customer Support.

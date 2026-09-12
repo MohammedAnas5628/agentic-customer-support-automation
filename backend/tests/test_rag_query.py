@@ -37,6 +37,15 @@ def _chunk(source: str, content: str) -> RagDocumentChunk:
     return RagDocumentChunk(content=content, source=source, embedding=[0.0] * 384)
 
 
+def test_policy_query_variants_cover_natural_paraphrases():
+    from backend.app.agents.knowledge_agent import query_variants
+
+    variants = query_variants("How many days do I have to return something?")
+
+    assert variants[0].startswith("How many days")
+    assert "return policy product return eligibility" in variants
+
+
 @pytest.mark.asyncio
 async def test_retrieval_embeds_query_orders_results_and_respects_top_k(monkeypatch):
     called = []

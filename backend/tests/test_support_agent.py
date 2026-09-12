@@ -77,3 +77,17 @@ async def test_support_agent_does_not_invent_customer_for_creation():
 
     assert result.success is False
     assert result.tool == "support_agent"
+
+
+@pytest.mark.asyncio
+async def test_support_agent_uses_authenticated_customer_for_creation(monkeypatch):
+    create = AsyncMock(return_value=TicketToolResult(True, "create_ticket", "Created."))
+    monkeypatch.setattr(support_agent, "create_ticket_tool", create)
+    monkeypatch.setattr(support_agent, "AsyncSessionLocal", FakeSession)
+
+    await support_agent.run_support_agent(
+        "I need to raise a complaint customer_id=999",
+        actor_customer_id=7,
+    )
+
+    assert create.call_args.kwargs["customer_id"] == 7

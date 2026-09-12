@@ -17,8 +17,8 @@ async def query_knowledge_base(request: RagQueryRequest) -> RagQueryResponse:
         logger.exception("RAG query failed")
         return RagQueryResponse(
             answer=(
-                "I couldn't access ElectroMart's knowledge base right now. "
-                "Please try again or contact customer support."
+                "I don't currently have enough information to answer that accurately. "
+                "I can help with ElectroMart products, orders, delivery, returns, warranty, payments, and support."
             ),
             sources=[],
             status="error",
