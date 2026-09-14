@@ -25,6 +25,7 @@ async def run_knowledge_agent(
     question: str,
     top_k: int | None = None,
     relevance_threshold: float | None = None,
+    conversation_history: list[dict[str, str]] | None = None,
 ) -> GroundedAnswer:
     """Orchestrate retrieval and grounded generation for knowledge questions."""
     async with AsyncSessionLocal() as session:
@@ -39,4 +40,4 @@ async def run_knowledge_agent(
             ),
             query_variants=query_variants(question),
         )
-    return await generate_grounded_answer(question, chunks)
+    return await generate_grounded_answer(question, chunks, conversation_history=conversation_history)

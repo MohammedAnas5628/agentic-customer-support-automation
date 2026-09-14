@@ -74,7 +74,7 @@ async def test_retrieval_embeds_query_orders_results_and_respects_top_k(monkeypa
         "warranty.md",
     ]
     assert [result.similarity for result in results] == [0.9, 0.8]
-    assert session.statement._limit_clause.value == 2
+    assert session.statement._limit_clause.value == 6
 
 
 @pytest.mark.asyncio
@@ -112,6 +112,8 @@ async def test_generation_passes_context_and_sources_to_customer_answer():
     assert result.sources == [{"source": "shipping_and_delivery.md", "score": 0.88}]
     assert result.status == "answered"
     assert "ONLY the supplied ElectroMart knowledge context" in model.messages[0].content
+    assert "Clearly identify recommendations" in model.messages[0].content
+    assert "Never present a paid promotion as independent advice" in model.messages[0].content
     assert "Delivery takes 3-5 days." in model.messages[1].content
 
 

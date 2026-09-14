@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class RegisterRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
+    name: str = Field(min_length=1, max_length=100, pattern=r"^[^\x00-\x1f\x7f]+$")
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     phone: str | None = Field(default=None, max_length=20)

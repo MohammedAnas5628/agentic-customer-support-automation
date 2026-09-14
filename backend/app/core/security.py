@@ -17,6 +17,11 @@ optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_e
 password_hash = PasswordHash.recommended()
 
 
+def _jwt_secret() -> str:
+    value = settings.jwt_secret
+    return value.get_secret_value() if hasattr(value, "get_secret_value") else str(value)
+
+
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
@@ -29,13 +34,14 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(customer: Customer) -> str:
-    if not settings.jwt_secret:
+    secret = _jwt_secret()
+    if not secret:
         raise RuntimeError("JWT_SECRET is not configured.")
     expires = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
     payload = {"sub": str(customer.id), "role": customer.role, "exp": expires}
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+    return jwt.encode(payload, secret, algorithm=settings.jwt_algorithm)
 
 
 async def get_current_user(
@@ -47,10 +53,11 @@ async def get_current_user(
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if not settings.jwt_secret:
+    secret = _jwt_secret()
+    if not secret:
         raise credentials_error
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(token, secret, algorithms=[settings.jwt_algorithm])
         customer_id = int(payload["sub"])
     except (jwt.PyJWTError, KeyError, TypeError, ValueError):
         raise credentials_error
@@ -94,10 +101,11 @@ async def get_optional_current_user(
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if not settings.jwt_secret:
+    secret = _jwt_secret()
+    if not secret:
         raise credentials_error
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(token, secret, algorithms=[settings.jwt_algorithm])
         customer_id = int(payload["sub"])
     except (jwt.PyJWTError, KeyError, TypeError, ValueError):
         raise credentials_error

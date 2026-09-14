@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
@@ -31,6 +31,15 @@ class Conversation(Base):
         String(30),
         nullable=False,
         default="web",
+    )
+
+    memory_summary: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    summary_through_message_id: Mapped[int | None] = mapped_column(
+        nullable=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(

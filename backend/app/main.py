@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 
 from backend.app.api.customers import router as customers_router
@@ -12,6 +14,7 @@ from backend.app.api.auth import router as auth_router
 from backend.app.api.support import router as support_router
 from backend.app.core.config import settings
 from backend.app.db.database import AsyncSessionLocal
+from backend.app.core.limiter import limiter
 
 
 app = FastAPI(
@@ -19,6 +22,20 @@ app = FastAPI(
     description="AI-powered customer support automation platform for ElectroMart.",
     version="1.0.0",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    if settings.app_env.lower() not in {"development", "test"}:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 app.include_router(orders_router)
 app.include_router(cancellation_router)

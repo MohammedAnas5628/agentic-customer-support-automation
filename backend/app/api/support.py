@@ -1,8 +1,17 @@
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from backend.app.core.security import get_optional_current_user
+from backend.app.db.database import get_db
+from backend.app.models.conversation import Conversation
+from backend.app.services.conversation_memory import (
+    get_or_create_conversation,
+    load_recent_history,
+    save_turn,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+from backend.app.core.limiter import limiter
 from backend.app.models.customer import Customer
 from backend.app.schemas.rag import RagSource
 from backend.app.schemas.support import SupportQueryRequest, SupportQueryResponse
@@ -53,13 +62,42 @@ def classify_message(message: str) -> tuple[str, str | None]:
 
 
 @router.post("/query", response_model=SupportQueryResponse)
+@limiter.limit("30/minute")
 async def query_support(
-    request: SupportQueryRequest,
+    request: Request,
+    payload: SupportQueryRequest,
     customer: Customer | None = Depends(get_optional_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> SupportQueryResponse:
-    intent, direct_response = classify_message(request.message)
+    conversation: Conversation | None = None
+    conversation_history: list[dict[str, str]] = []
+    if customer is not None:
+        try:
+            conversation = await get_or_create_conversation(
+                session, customer.id, payload.conversation_id
+            )
+            conversation_history = await load_recent_history(session, conversation.id)
+        except ValueError:
+            await session.rollback()
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+        except Exception:
+            await session.rollback()
+            conversation = None
+    intent, direct_response = classify_message(payload.message)
     if direct_response is not None:
-        return SupportQueryResponse(answer=direct_response, sources=[], status="answered", intent=intent)
+        response = SupportQueryResponse(
+            answer=direct_response,
+            sources=[],
+            status="answered",
+            intent=intent,
+            conversation_id=conversation.id if conversation is not None else None,
+        )
+        if conversation is not None:
+            try:
+                await save_turn(session, conversation, payload.message, response.answer)
+            except Exception:
+                await session.rollback()
+        return response
     if intent in {"order", "support", "escalation"} and customer is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -67,20 +105,28 @@ async def query_support(
             headers={"WWW-Authenticate": "Bearer"},
         )
     state = await run_support_workflow_async(
-        request.message,
+        payload.message,
         intent,
         authenticated_customer_id=customer.id if customer else None,
         authenticated_role=customer.role if customer else None,
+        conversation_history=conversation_history,
     )
     rag_status = state.get("rag_status")
     answer = state.get("final_response", _UNSUPPORTED_RESPONSE)
     if intent == "knowledge" and rag_status in {"no_context", "error"}:
         answer = _NO_CONTEXT_RESPONSE
-    return SupportQueryResponse(
+    response = SupportQueryResponse(
         answer=answer,
         sources=[RagSource(**source) for source in state.get("sources", [])],
         status="answered" if rag_status in {None, "answered"} else "unavailable",
         intent=intent,
         escalation_status=state.get("escalation_status"),
         ticket_number=state.get("handoff_reference"),
+        conversation_id=conversation.id if conversation is not None else None,
     )
+    if conversation is not None:
+        try:
+            await save_turn(session, conversation, payload.message, response.answer)
+        except Exception:
+            await session.rollback()
+    return response

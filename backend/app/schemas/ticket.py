@@ -38,13 +38,13 @@ class TicketCreate(BaseModel):
     customer_id: int
     order_number: str | None = None
     subject: str = Field(min_length=1, max_length=200)
-    description: str = Field(min_length=1)
+    description: str = Field(min_length=1, max_length=10000, pattern=r"^[^\x00-\x08\x0b\x0c\x0e-\x1f\x7f]+$")
     status: str = Field(default="open", min_length=1, max_length=30)
     priority: str = Field(default="normal", min_length=1, max_length=20)
 
 
 class TicketUpdate(BaseModel):
     subject: str | None = Field(default=None, min_length=1, max_length=200)
-    description: str | None = Field(default=None, min_length=1)
+    description: str | None = Field(default=None, min_length=1, max_length=10000, pattern=r"^[^\x00-\x08\x0b\x0c\x0e-\x1f\x7f]+$")
     status: str | None = Field(default=None, min_length=1, max_length=30)
     priority: str | None = Field(default=None, min_length=1, max_length=20)

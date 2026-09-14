@@ -1,10 +1,12 @@
 # FastAPI
 fastapi
+slowapi
 uvicorn[standard]
 
 # Configuration & validation
 pydantic
 pydantic-settings
+slowapi
 python-dotenv
 
 # Database

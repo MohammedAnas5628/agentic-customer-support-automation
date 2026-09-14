@@ -1,0 +1,159 @@
+{
+  "timestamp": "2026-09-14T09:48:18.473563",
+  "option_a": {
+    "tests": [
+      {
+        "name": "JWT Secret Validation",
+        "status": "ERROR",
+        "error": "3 validation errors for Settings\ngemini_api_key\n  Field required [type=missing, input_value={}, inpu"
+      },
+      {
+        "name": "Support Agent Pattern Matching",
+        "status": "PASS"
+      },
+      {
+        "name": "Input Validation",
+        "status": "PASS"
+      },
+      {
+        "name": "JSON Validation",
+        "status": "PASS"
+      },
+      {
+        "name": "Oversized Input Detection",
+        "status": "PASS"
+      },
+      {
+        "name": "Customer ID Uniqueness",
+        "status": "PASS"
+      },
+      {
+        "name": "Order Status Transitions",
+        "status": "PASS"
+      },
+      {
+        "name": "Response Structure",
+        "status": "PASS"
+      }
+    ],
+    "passed": 7,
+    "failed": 1,
+    "total": 8
+  },
+  "option_b": {
+    "tests": [
+      {
+        "name": "SQL Injection Detection",
+        "status": "FAIL",
+        "error": "SQL injection not detected: 1' OR '1'='1"
+      },
+      {
+        "name": "XSS Injection Detection",
+        "status": "PASS"
+      },
+      {
+        "name": "Prompt Injection Detection",
+        "status": "FAIL",
+        "error": ""
+      },
+      {
+        "name": "JWT Secret Not Empty",
+        "status": "ERROR",
+        "error": "3 validation errors for Settings\ngemini_api_key\n  Field required [type=missing, input_value={}, inpu"
+      },
+      {
+        "name": "Cross-Customer Access Prevention",
+        "status": "PASS"
+      },
+      {
+        "name": "Unauthenticated Access Prevention",
+        "status": "PASS"
+      },
+      {
+        "name": "Rate Limiting",
+        "status": "PASS"
+      },
+      {
+        "name": "Path Traversal Detection",
+        "status": "FAIL",
+        "error": ""
+      },
+      {
+        "name": "CSRF Protection",
+        "status": "PASS"
+      },
+      {
+        "name": "API Key Security",
+        "status": "PASS"
+      }
+    ],
+    "passed": 6,
+    "failed": 4,
+    "vulnerabilities": [],
+    "total": 10
+  },
+  "option_c": {
+    "tests": [
+      {
+        "name": "Prompt Injection Resistance",
+        "status": "PASS"
+      },
+      {
+        "name": "Recall@K Metric",
+        "status": "PASS"
+      },
+      {
+        "name": "Precision@K Metric",
+        "status": "PASS"
+      },
+      {
+        "name": "MRR (Mean Reciprocal Rank)",
+        "status": "PASS"
+      },
+      {
+        "name": "nDCG (Normalized DCG)",
+        "status": "PASS"
+      },
+      {
+        "name": "Hit Rate Metric",
+        "status": "PASS"
+      },
+      {
+        "name": "Hallucination Detection",
+        "status": "FAIL",
+        "error": ""
+      },
+      {
+        "name": "Citation Accuracy",
+        "status": "PASS"
+      },
+      {
+        "name": "Agent Tool Selection",
+        "status": "PASS"
+      },
+      {
+        "name": "Response Relevance",
+        "status": "PASS"
+      },
+      {
+        "name": "Factual Accuracy",
+        "status": "PASS"
+      },
+      {
+        "name": "Confidence Scoring",
+        "status": "PASS"
+      }
+    ],
+    "passed": 11,
+    "failed": 1,
+    "metrics": {
+      "Recall@5": 0.6,
+      "Precision@5": 0.8,
+      "MRR": 1.0,
+      "nDCG": 0.95,
+      "Hit Rate": 0.9
+    },
+    "total": 12
+  },
+  "summary": {}
+}

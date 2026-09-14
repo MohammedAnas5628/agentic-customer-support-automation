@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 import logging
 
 from backend.app.agents.knowledge_agent import run_knowledge_agent
+from backend.app.core.limiter import limiter
 from backend.app.schemas.rag import RagQueryRequest, RagQueryResponse, RagSource
 
 
@@ -10,9 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/query", response_model=RagQueryResponse)
-async def query_knowledge_base(request: RagQueryRequest) -> RagQueryResponse:
+@limiter.limit("30/minute")
+async def query_knowledge_base(request: Request, query: RagQueryRequest) -> RagQueryResponse:
     try:
-        result = await run_knowledge_agent(request.query)
+        result = await run_knowledge_agent(query.query)
     except Exception:
         logger.exception("RAG query failed")
         return RagQueryResponse(

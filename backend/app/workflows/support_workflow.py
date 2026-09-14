@@ -34,6 +34,7 @@ class SupportState(TypedDict, total=False):
     handoff_reference: str | None
     authenticated_customer_id: int | None
     authenticated_role: str
+    conversation_history: list[dict[str, str]]
 
 
 def _record_node(state: SupportState, node_name: str) -> list[str]:
@@ -48,7 +49,10 @@ def router_node(state: SupportState) -> SupportState:
 
 async def knowledge_node(state: SupportState) -> SupportState:
     try:
-        result = await run_knowledge_agent(state["user_message"])
+        result = await run_knowledge_agent(
+            state["user_message"],
+            conversation_history=state.get("conversation_history"),
+        )
     except Exception:
         logger.exception("Knowledge Agent failed while handling a customer question")
         return {
@@ -245,6 +249,7 @@ async def run_support_workflow_async(
     *,
     authenticated_customer_id: int | None = None,
     authenticated_role: str | None = None,
+    conversation_history: list[dict[str, str]] | None = None,
 ) -> SupportState:
     """Run the workflow in async applications such as FastAPI."""
     initial_state: SupportState = {
@@ -256,6 +261,8 @@ async def run_support_workflow_async(
         initial_state["authenticated_customer_id"] = authenticated_customer_id
     if authenticated_role is not None:
         initial_state["authenticated_role"] = authenticated_role
+    if conversation_history:
+        initial_state["conversation_history"] = conversation_history
     return await support_graph.ainvoke(initial_state)
 
 
