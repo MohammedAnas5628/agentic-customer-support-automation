@@ -1,6 +1,11 @@
 import asyncio
+import os
+import sys
 from datetime import datetime, timezone
 from decimal import Decimal
+
+# Ensure project root is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -57,38 +62,39 @@ async def seed_database() -> None:
 
         # ---------------------------------------------------------
         # Customers
-        # ---------------------------------------------------------
+        from backend.app.core.security import hash_password
+        default_pwd_hash = hash_password("Password123!")
 
         customers = [
             Customer(
                 name="Anas Khan",
                 email="anas@example.com",
                 phone="9876500001",
-                password_hash="DEMO_HASH_001",
+                password_hash=default_pwd_hash,
             ),
             Customer(
                 name="Rahul Sharma",
                 email="rahul@example.com",
                 phone="9876500002",
-                password_hash="DEMO_HASH_002",
+                password_hash=default_pwd_hash,
             ),
             Customer(
                 name="Aisha Patel",
                 email="aisha@example.com",
                 phone="9876500003",
-                password_hash="DEMO_HASH_003",
+                password_hash=default_pwd_hash,
             ),
             Customer(
                 name="Arjun Reddy",
                 email="arjun@example.com",
                 phone="9876500004",
-                password_hash="DEMO_HASH_004",
+                password_hash=default_pwd_hash,
             ),
             Customer(
                 name="Sara Ahmed",
                 email="sara@example.com",
                 phone="9876500005",
-                password_hash="DEMO_HASH_005",
+                password_hash=default_pwd_hash,
             ),
         ]
 

@@ -1,4 +1,5 @@
-from sqlalchemy import select
+import re
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.order import Order
@@ -8,9 +9,22 @@ async def cancel_order(
     session: AsyncSession,
     order_number: str,
 ) -> tuple[Order | None, str | None]:
+    clean = re.sub(r"[-_\s]", "", order_number).upper()
+    digits = re.sub(r"\D", "", order_number)
+    conditions = [
+        Order.order_number.ilike(order_number.strip()),
+        Order.order_number.ilike(clean),
+    ]
+    if digits:
+        conditions.extend([
+            Order.order_number.ilike(f"EM{digits}"),
+            Order.order_number.ilike(f"EM-{digits}"),
+            Order.order_number.ilike(f"ORD-{digits}"),
+        ])
+
     statement = (
         select(Order)
-        .where(Order.order_number == order_number)
+        .where(or_(*conditions))
         .with_for_update()
     )
     result = await session.execute(statement)

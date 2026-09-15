@@ -11,6 +11,7 @@ class CustomerResponse(BaseModel):
     email: str
     phone: str | None
     is_active: bool
+    role: str = "customer"
     created_at: datetime
     updated_at: datetime
 

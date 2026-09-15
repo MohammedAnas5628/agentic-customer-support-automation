@@ -23,6 +23,25 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str
+    db_pool_size: int = 20
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 1800
+
+    # CORS
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
 
     @field_validator("jwt_secret")
     @classmethod
@@ -33,7 +52,7 @@ class Settings(BaseSettings):
         return SecretStr(secret)
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env.test", "../.env.test", ".env", "backend/.env", "../.env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

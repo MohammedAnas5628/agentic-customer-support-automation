@@ -47,6 +47,30 @@ def test_security_headers_are_added():
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["Referrer-Policy"] == "no-referrer"
     assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
+    assert "x-request-id" in response.headers
+
+
+def test_custom_request_id_is_preserved():
+    client = TestClient(app)
+    custom_id = "custom-trace-id-12345"
+    response = client.get("/health", headers={"X-Request-ID": custom_id})
+
+    assert response.status_code == 200
+    assert response.headers.get("x-request-id") == custom_id
+
+
+def test_cors_preflight_allowed():
+    client = TestClient(app)
+    response = client.options(
+        "/api/products",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
 
 
 def test_rate_limiter_is_registered_on_app():

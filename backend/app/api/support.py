@@ -36,8 +36,14 @@ _UNSUPPORTED_RESPONSE = "I mainly help with ElectroMart products, orders, delive
 _NO_CONTEXT_RESPONSE = "I don't have enough ElectroMart information to answer that clearly. I can help with products, orders, delivery, returns, warranty, payments, or support."
 
 
-def classify_message(message: str) -> tuple[str, str | None]:
+from backend.app.tools.order_tools import extract_order_number
+
+def classify_message(
+    message: str,
+    conversation_history: list[dict[str, str]] | None = None,
+) -> tuple[str, str | None]:
     """Return a bounded support intent or a direct customer-facing reply."""
+    # 1. Direct conversational greetings & courtesy
     if _GREETING.match(message):
         return "conversation", "Hey! Welcome to ElectroMart. How can I help you today?"
     if _THANKS.match(message):
@@ -45,19 +51,79 @@ def classify_message(message: str) -> tuple[str, str | None]:
     if _GOODBYE.match(message):
         return "conversation", "Goodbye! Thanks for choosing ElectroMart."
     if _WELLBEING.search(message):
-        return "conversation", f"I'm doing great! { _CAPABILITY_RESPONSE }"
+        return "conversation", f"I'm doing great! {_CAPABILITY_RESPONSE}"
     if _CAPABILITIES.search(message):
         return "conversation", _CAPABILITY_RESPONSE
+
+    # 2. Cart queries
+    if re.search(r"\b(cart|shopping bag|in my cart|items in cart|check cart)\b", message, re.I):
+        return (
+            "conversation",
+            "You can view and manage items in your cart anytime by clicking the Cart icon in the top header or visiting /cart. Let me know if you would like help with any products or checkout!",
+        )
+
+    # 3. Escalations to human manager
     if _ESCALATION.search(message):
         return "escalation", None
-    if _ORDER.search(message):
+
+    # 4. Disambiguate Policy questions vs Specific Order actions
+    has_order_number = extract_order_number(message) is not None
+    is_policy_inquiry = bool(
+        re.search(
+            r"\b(can i (cancel|return)|cancellation policy|how (can|do) i cancel|when can i cancel|cancel.*after|cancel.*dispatch|policy on cancel|allowed to cancel)\b",
+            message,
+            re.I,
+        )
+    )
+    if is_policy_inquiry and not has_order_number:
+        return "knowledge", None
+
+    # 5. Specific Order actions, order cancellation, or viewing user's own orders
+    if has_order_number or re.search(
+        r"\b(my orders?|orders?.*(have|placed|so far)|see.*orders?|list.*orders?|show.*orders?|track my order|cancel my order|refund my order|cancel.*(?:first|second|that|this|it|order)|cancel (?:the|it)\b)\b",
+        message,
+        re.I,
+    ):
         return "order", None
+
+    # 6. Support tickets / damage reports
     if _SUPPORT.search(message):
         return "support", None
+
+    # 7. Knowledge base policies
     if _KNOWLEDGE.search(message):
         return "knowledge", None
+
+    # 8. Catalog product search
     if _CATALOG.search(message):
         return "catalog", None
+
+    # 9. Context-aware follow-up resolution from conversation history
+    is_followup = bool(
+        re.search(
+            r"\b(those|these|that|them|it|more|explain|tell me|compare|difference|which|cheapest|best|first|second|above|recommended|show me|worth|money|think|opinion)\b",
+            message,
+            re.I,
+        )
+    )
+    if is_followup and conversation_history:
+        # Inspect recent assistant messages to determine the active subject
+        for turn in reversed(conversation_history):
+            if turn.get("role") == "assistant":
+                prev_text = turn.get("content", "").lower()
+                # Check ORDER first! If previous message showed orders or order details:
+                if any(w in prev_text for w in ["order em", "orders found", "your order", "status: **", "tracking:", "items in order"]):
+                    return "order", None
+                if any(w in prev_text for w in ["catalog", "laptop", "phone", "headphone", "in stock", "available"]):
+                    return "catalog", None
+                if any(w in prev_text for w in ["policy", "return", "refund", "warranty", "shipping", "delivery", "payment"]):
+                    return "knowledge", None
+                if any(w in prev_text for w in ["order", "tracking", "status"]):
+                    return "order", None
+
+    if _ORDER.search(message):
+        return "order", None
+
     return "unsupported", _UNSUPPORTED_RESPONSE
 
 
@@ -83,7 +149,7 @@ async def query_support(
         except Exception:
             await session.rollback()
             conversation = None
-    intent, direct_response = classify_message(payload.message)
+    intent, direct_response = classify_message(payload.message, conversation_history)
     if direct_response is not None:
         response = SupportQueryResponse(
             answer=direct_response,

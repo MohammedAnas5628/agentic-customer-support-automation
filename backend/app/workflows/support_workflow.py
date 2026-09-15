@@ -84,7 +84,10 @@ async def knowledge_node(state: SupportState) -> SupportState:
 
 async def catalog_node(state: SupportState) -> SupportState:
     try:
-        answer = await run_catalog_agent(state["user_message"])
+        answer = await run_catalog_agent(
+            state["user_message"],
+            conversation_history=state.get("conversation_history"),
+        )
     except Exception:
         logger.exception("Catalog Agent failed while handling a product question")
         return {
@@ -110,6 +113,7 @@ async def order_node(state: SupportState) -> SupportState:
                 state["user_message"],
                 actor_customer_id=state.get("authenticated_customer_id"),
                 actor_role=state.get("authenticated_role", "customer"),
+                conversation_history=state.get("conversation_history"),
             )
         else:
             result = await run_order_agent(state["user_message"])

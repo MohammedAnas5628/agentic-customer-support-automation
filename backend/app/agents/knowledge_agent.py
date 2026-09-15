@@ -10,10 +10,16 @@ def query_variants(question: str) -> list[str]:
     variants = [question]
     families = (
         (("return", "returns", "return window", "return something"), "return policy product return eligibility"),
-        (("shipping", "delivery", "arrive", "order arrive"), "shipping delivery time arrival"),
-        (("warranty", "guarantee", "repair"), "warranty coverage duration repair"),
-        (("payment", "pay", "card", "upi"), "payment methods checkout accepted payments"),
+        (("shipping", "delivery", "arrive", "order arrive", "track", "tracking"), "shipping delivery time arrival tracking"),
+        (("warranty", "guarantee", "repair", "service center"), "warranty coverage duration repair claim"),
+        (("payment", "pay", "card", "upi", "net banking", "cod"), "payment methods checkout accepted payments"),
         (("cancel", "cancellation"), "cancellation policy cancel order"),
+        (("replace", "replacement", "exchange", "damaged", "defective", "broken", "wrong item"), "cancellation replacement damaged defective exchange policy"),
+        (("invoice", "tax", "gst", "receipt", "bill", "billing"), "invoice tax gst receipt billing download"),
+        (("coupon", "discount", "offer", "promo", "voucher", "cashback"), "offers discounts coupons promotional vouchers eligibility"),
+        (("account", "password", "login", "reset", "otp", "profile"), "account security login password reset authentication"),
+        (("human", "agent", "representative", "contact support", "talk to someone", "phone", "helpline"), "customer support contact human agent escalation helpline"),
+        (("specs", "specification", "features", "battery", "compatibility", "catalog"), "product catalog specifications features compatibility details"),
     )
     for terms, expansion in families:
         if any(term in normalized for term in terms):
